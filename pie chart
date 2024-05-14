@@ -1,0 +1,52 @@
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import matplotlib.pyplot as plt
+
+def create_pie_chart(data):
+    # Count paid and not paid invoices
+    paid_count = data.count("Paid")
+    not_paid_count = data.count("Not Paid")
+
+    # Create labels and values for the pie chart
+    labels = ['Paid', 'Not Paid']
+    sizes = [paid_count, not_paid_count]
+    colors = ['green', 'red']
+    explode = (0.1, 0)  # explode the 1st slice (Paid)
+
+    # Plotting the pie chart
+    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140)
+    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    plt.title('Invoices Paid vs Not Paid')
+
+    # Saving the plot to a file
+    plt.savefig('/tmp/pie_chart.png')
+
+# Function to fetch data from Google Sheet
+def fetch_data_from_google_sheet():
+    # Define the scope of Google Sheets API
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+
+    # Provide path to the Service Account Credential JSON file
+    creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+
+    # Authorize the clientsheet 
+    client = gspread.authorize(creds)
+
+    # Open the Google Spreadsheet by its title
+    sheet = client.open("Your Google Sheet Name Here").sheet1
+
+    # Get all values from the first column (assuming the column contains invoice payment status)
+    data = sheet.col_values(1)
+
+    return data
+
+# Main function to execute when the Zap runs
+def main():
+    # Fetch data from Google Sheet
+    data = fetch_data_from_google_sheet()
+    
+    # Create pie chart
+    create_pie_chart(data)
+
+
+main()
